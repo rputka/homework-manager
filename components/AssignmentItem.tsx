@@ -32,7 +32,9 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
   };
 
   const formatDueDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Handle date string in local timezone to avoid timezone issues
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -69,7 +71,9 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
         ? 'biweekly' 
         : 'monthly';
     
-    const endDate = new Date(assignment.recurringSchedule.endDate).toLocaleDateString();
+    // Parse end date in local timezone to avoid timezone issues
+    const [endYear, endMonth, endDay] = assignment.recurringSchedule.endDate.split('-').map(Number);
+    const endDate = new Date(endYear, endMonth - 1, endDay).toLocaleDateString();
     
     return `${frequencyText} ${days} until ${endDate}`;
   };
@@ -77,7 +81,12 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
   const isOverdue = () => {
     const now = new Date();
     const dueTime = assignment.dueTime || '23:59'; // Default fallback
-    const dueDateTime = new Date(`${assignment.dueDate}T${dueTime}`);
+    
+    // Parse date in local timezone to avoid timezone issues
+    const [year, month, day] = assignment.dueDate.split('-').map(Number);
+    const [hours, minutes] = dueTime.split(':').map(Number);
+    const dueDateTime = new Date(year, month - 1, day, hours, minutes);
+    
     return dueDateTime < now && !assignment.isCompleted;
   };
 

@@ -4,7 +4,9 @@ const STORAGE_KEY = 'homework-manager-data';
 
 // Helper function to get next occurrence of a day of the week based on original due date
 const getNextOccurrence = (daysOfWeek: number[], originalDueDate: string, frequency: 'weekly' | 'biweekly' | 'monthly' = 'weekly'): Date => {
-  const originalDate = new Date(originalDueDate);
+  // Parse date in local timezone to avoid timezone issues
+  const [year, month, day] = originalDueDate.split('-').map(Number);
+  const originalDate = new Date(year, month - 1, day);
   const today = new Date();
   
   // Find the next occurrence after today
@@ -130,7 +132,9 @@ export const resetCompletedAssignments = (): void => {
         
         // For recurring assignments, check if they should continue
         if (assignment.recurringSchedule) {
-          const endDate = new Date(assignment.recurringSchedule.endDate);
+          // Parse end date in local timezone to avoid timezone issues
+          const [endYear, endMonth, endDay] = assignment.recurringSchedule.endDate.split('-').map(Number);
+          const endDate = new Date(endYear, endMonth - 1, endDay);
           const today = new Date();
           
           // If past end date, remove the assignment
