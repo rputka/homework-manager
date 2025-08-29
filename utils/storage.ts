@@ -2,23 +2,25 @@ import { AppData, Class, Assignment } from '@/types';
 
 const STORAGE_KEY = 'homework-manager-data';
 
-// Helper function to get next occurrence of a day of the week
-const getNextOccurrence = (daysOfWeek: number[], fromDate: Date = new Date()): Date => {
-  const currentDay = fromDate.getDay();
-  const sortedDays = [...daysOfWeek].sort((a, b) => a - b);
+// Helper function to get next occurrence of a day of the week based on original due date
+const getNextOccurrence = (daysOfWeek: number[], originalDueDate: string, frequency: 'weekly' | 'biweekly' | 'monthly' = 'weekly'): Date => {
+  const originalDate = new Date(originalDueDate);
+  const today = new Date();
   
-  // Find the next occurrence
-  for (const day of sortedDays) {
-    if (day > currentDay) {
-      const nextDate = new Date(fromDate);
-      nextDate.setDate(fromDate.getDate() + (day - currentDay));
-      return nextDate;
+  // Find the next occurrence after today
+  let nextDate = new Date(originalDate);
+  
+  // Keep advancing the date until we find the next occurrence after today
+  while (nextDate <= today) {
+    if (frequency === 'weekly') {
+      nextDate.setDate(nextDate.getDate() + 7);
+    } else if (frequency === 'biweekly') {
+      nextDate.setDate(nextDate.getDate() + 14);
+    } else if (frequency === 'monthly') {
+      nextDate.setMonth(nextDate.getMonth() + 1);
     }
   }
   
-  // If no day found this week, get the first day of next week
-  const nextDate = new Date(fromDate);
-  nextDate.setDate(fromDate.getDate() + (7 - currentDay + sortedDays[0]));
   return nextDate;
 };
 
@@ -136,8 +138,12 @@ export const resetCompletedAssignments = (): void => {
             return false;
           }
           
-          // Calculate next due date
-          const nextDueDate = getNextOccurrence(assignment.recurringSchedule.daysOfWeek);
+          // Calculate next due date based on original due date and frequency
+          const nextDueDate = getNextOccurrence(
+            assignment.recurringSchedule.daysOfWeek,
+            assignment.dueDate, // Use the current due date as the base
+            assignment.recurringSchedule.frequency
+          );
           
           // Update the assignment with new due date
           assignment.dueDate = formatDate(nextDueDate);

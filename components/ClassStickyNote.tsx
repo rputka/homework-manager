@@ -1,19 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { Class } from '@/types';
+import { Class, Assignment } from '@/types';
 import { deleteClass } from '@/utils/storage';
 import AssignmentItem from './AssignmentItem';
 import AddAssignmentModal from './AddAssignmentModal';
-import { Plus, Trash2, BookOpen } from 'lucide-react';
+import AddClassModal from './AddClassModal';
+import { Plus, Trash2, BookOpen, Edit } from 'lucide-react';
 
 interface ClassStickyNoteProps {
   classData: Class;
   onUpdate: () => void;
+  onEditClass: (classData: Class) => void;
 }
 
-export default function ClassStickyNote({ classData, onUpdate }: ClassStickyNoteProps) {
+export default function ClassStickyNote({ classData, onUpdate, onEditClass }: ClassStickyNoteProps) {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
 
   const handleDeleteClass = () => {
     if (confirm(`Are you sure you want to delete "${classData.name}" and all its assignments?`)) {
@@ -22,8 +25,19 @@ export default function ClassStickyNote({ classData, onUpdate }: ClassStickyNote
     }
   };
 
-  const completedCount = classData.assignments.filter(a => a.isCompleted).length;
-  const totalCount = classData.assignments.length;
+  const handleEditAssignment = (assignment: Assignment) => {
+    setEditingAssignment(assignment);
+  };
+
+  const handleCloseAssignmentModal = () => {
+    setShowAddModal(false);
+    setEditingAssignment(null);
+  };
+
+  // Only count non-future assignments in totals
+  const activeAssignments = classData.assignments.filter(a => !a.isFutureAssignment);
+  const completedCount = activeAssignments.filter(a => a.isCompleted).length;
+  const totalCount = activeAssignments.length;
 
   return (
     <>
@@ -33,13 +47,22 @@ export default function ClassStickyNote({ classData, onUpdate }: ClassStickyNote
             <BookOpen size={20} className="text-gray-700" />
             <h2 className="text-xl font-bold text-gray-800">{classData.name}</h2>
           </div>
-          <button
-            onClick={handleDeleteClass}
-            className="text-gray-400 hover:text-red-500 transition-colors p-1"
-            title="Delete class"
-          >
-            <Trash2 size={16} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => onEditClass(classData)}
+              className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+              title="Edit class"
+            >
+              <Edit size={16} />
+            </button>
+            <button
+              onClick={handleDeleteClass}
+              className="text-gray-400 hover:text-red-500 transition-colors p-1"
+              title="Delete class"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="mb-4 flex-shrink-0">
@@ -72,6 +95,7 @@ export default function ClassStickyNote({ classData, onUpdate }: ClassStickyNote
                   assignment={assignment}
                   classId={classData.id}
                   onUpdate={onUpdate}
+                  onEdit={handleEditAssignment}
                 />
               ))
           )}
@@ -87,11 +111,13 @@ export default function ClassStickyNote({ classData, onUpdate }: ClassStickyNote
       </div>
 
       <AddAssignmentModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        isOpen={showAddModal || editingAssignment !== null}
+        onClose={handleCloseAssignmentModal}
         classId={classData.id}
         classColor={classData.color}
         onUpdate={onUpdate}
+        isEdit={editingAssignment !== null}
+        assignmentToEdit={editingAssignment || undefined}
       />
     </>
   );

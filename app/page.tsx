@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getStoredData, resetCompletedAssignments } from '@/utils/storage';
-import { AppData } from '@/types';
+import { AppData, Class } from '@/types';
 import ClassStickyNote from '@/components/ClassStickyNote';
 import AddClassModal from '@/components/AddClassModal';
 import { Plus, RotateCcw, BookOpen, Calendar } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Plus, RotateCcw, BookOpen, Calendar } from 'lucide-react';
 export default function HomePage() {
   const [data, setData] = useState<AppData>({ classes: [], lastReset: new Date().toISOString() });
   const [showAddClassModal, setShowAddClassModal] = useState(false);
+  const [editingClass, setEditingClass] = useState<Class | null>(null);
 
   const loadData = () => {
     setData(getStoredData());
@@ -24,6 +25,15 @@ export default function HomePage() {
       resetCompletedAssignments();
       loadData();
     }
+  };
+
+  const handleEditClass = (classData: Class) => {
+    setEditingClass(classData);
+  };
+
+  const handleCloseClassModal = () => {
+    setShowAddClassModal(false);
+    setEditingClass(null);
   };
 
   const totalAssignments = data.classes.reduce((sum, classItem) => sum + classItem.assignments.length, 0);
@@ -120,6 +130,7 @@ export default function HomePage() {
                 <ClassStickyNote
                   classData={classItem}
                   onUpdate={loadData}
+                  onEditClass={handleEditClass}
                 />
               </div>
             ))}
@@ -128,9 +139,11 @@ export default function HomePage() {
       </main>
 
       <AddClassModal
-        isOpen={showAddClassModal}
-        onClose={() => setShowAddClassModal(false)}
+        isOpen={showAddClassModal || editingClass !== null}
+        onClose={handleCloseClassModal}
         onUpdate={loadData}
+        isEdit={editingClass !== null}
+        classToEdit={editingClass || undefined}
       />
     </div>
   );

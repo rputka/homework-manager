@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Class, StickyColor } from '@/types';
-import { addClass } from '@/utils/storage';
+import { addClass, updateClass } from '@/utils/storage';
 import { X, BookOpen } from 'lucide-react';
 
 interface AddClassModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: () => void;
+  isEdit?: boolean;
+  classToEdit?: Class;
 }
 
 const colorOptions: { color: StickyColor; name: string; bgClass: string }[] = [
@@ -20,29 +22,53 @@ const colorOptions: { color: StickyColor; name: string; bgClass: string }[] = [
   { color: 'orange', name: 'Orange', bgClass: 'bg-sticky-orange' },
 ];
 
-export default function AddClassModal({ isOpen, onClose, onUpdate }: AddClassModalProps) {
+export default function AddClassModal({ 
+  isOpen, 
+  onClose, 
+  onUpdate, 
+  isEdit = false, 
+  classToEdit 
+}: AddClassModalProps) {
   const [className, setClassName] = useState('');
   const [selectedColor, setSelectedColor] = useState<StickyColor>('yellow');
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isEdit && classToEdit) {
+      setClassName(classToEdit.name);
+      setSelectedColor(classToEdit.color);
+    } else {
+      // Reset form for new class
+      setClassName('');
+      setSelectedColor('yellow');
+    }
+  }, [isEdit, classToEdit, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!className.trim()) return;
 
-    const newClass: Class = {
-      id: Date.now().toString(),
-      name: className.trim(),
-      color: selectedColor,
-      assignments: [],
-      createdAt: new Date().toISOString()
-    };
+    if (isEdit && classToEdit) {
+      // Update existing class
+      updateClass(classToEdit.id, {
+        name: className.trim(),
+        color: selectedColor
+      });
+    } else {
+      // Create new class
+      const newClass: Class = {
+        id: Date.now().toString(),
+        name: className.trim(),
+        color: selectedColor,
+        assignments: [],
+        createdAt: new Date().toISOString()
+      };
 
-    addClass(newClass);
+      addClass(newClass);
+    }
+
     onUpdate();
-    
-    // Reset form
-    setClassName('');
-    setSelectedColor('yellow');
     onClose();
   };
 
@@ -52,7 +78,9 @@ export default function AddClassModal({ isOpen, onClose, onUpdate }: AddClassMod
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Add New Class</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {isEdit ? 'Edit Class' : 'Add New Class'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -116,7 +144,7 @@ export default function AddClassModal({ isOpen, onClose, onUpdate }: AddClassMod
               className="btn-primary flex-1"
               disabled={!className.trim()}
             >
-              Add Class
+              {isEdit ? 'Update Class' : 'Add Class'}
             </button>
           </div>
         </form>

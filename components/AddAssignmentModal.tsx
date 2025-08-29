@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Assignment, StickyColor } from '@/types';
-import { addAssignment } from '@/utils/storage';
-import { X, Calendar, FileText, RotateCcw, Clock } from 'lucide-react';
+import { addAssignment, updateAssignment } from '@/utils/storage';
+import { X, Calendar, FileText, RotateCcw, Clock, CalendarDays } from 'lucide-react';
 
 interface AddAssignmentModalProps {
   isOpen: boolean;
@@ -11,6 +11,8 @@ interface AddAssignmentModalProps {
   classId: string;
   classColor: StickyColor;
   onUpdate: () => void;
+  isEdit?: boolean;
+  assignmentToEdit?: Assignment;
 }
 
 const DAYS_OF_WEEK = [
@@ -23,20 +25,56 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Saturday', short: 'Sat' },
 ];
 
+const FREQUENCY_OPTIONS = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Biweekly' },
+  { value: 'monthly', label: 'Monthly' },
+];
+
 export default function AddAssignmentModal({
   isOpen,
   onClose,
   classId,
   classColor,
-  onUpdate
+  onUpdate,
+  isEdit = false,
+  assignmentToEdit
 }: AddAssignmentModalProps) {
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [dueTime, setDueTime] = useState('23:59');
   const [notes, setNotes] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
+  const [isFutureAssignment, setIsFutureAssignment] = useState(false);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [frequency, setFrequency] = useState<'weekly' | 'biweekly' | 'monthly'>('weekly');
   const [endDate, setEndDate] = useState('');
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isEdit && assignmentToEdit) {
+      setTitle(assignmentToEdit.title);
+      setDueDate(assignmentToEdit.dueDate);
+      setDueTime(assignmentToEdit.dueTime || '23:59');
+      setNotes(assignmentToEdit.notes);
+      setIsRecurring(assignmentToEdit.isRecurring);
+      setIsFutureAssignment(assignmentToEdit.isFutureAssignment);
+      setSelectedDays(assignmentToEdit.recurringSchedule?.daysOfWeek || []);
+      setFrequency(assignmentToEdit.recurringSchedule?.frequency || 'weekly');
+      setEndDate(assignmentToEdit.recurringSchedule?.endDate || '');
+    } else {
+      // Reset form for new assignment
+      setTitle('');
+      setDueDate('');
+      setDueTime('23:59');
+      setNotes('');
+      setIsRecurring(false);
+      setIsFutureAssignment(false);
+      setSelectedDays([]);
+      setFrequency('weekly');
+      setEndDate('');
+    }
+  }, [isEdit, assignmentToEdit, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,33 +83,48 @@ export default function AddAssignmentModal({
     if (isRecurring && selectedDays.length === 0) return;
     if (isRecurring && !endDate) return;
 
-    const newAssignment: Assignment = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      dueDate,
-      dueTime,
-      notes: notes.trim(),
-      isRecurring,
-      recurringSchedule: isRecurring ? {
-        daysOfWeek: selectedDays,
-        endDate,
-        nextDueDate: dueDate
-      } : undefined,
-      isCompleted: false,
-      createdAt: new Date().toISOString()
-    };
+    if (isEdit && assignmentToEdit) {
+      // Update existing assignment
+      const updatedAssignment: Partial<Assignment> = {
+        title: title.trim(),
+        dueDate,
+        dueTime,
+        notes: notes.trim(),
+        isRecurring,
+        isFutureAssignment,
+        recurringSchedule: isRecurring ? {
+          daysOfWeek: selectedDays,
+          frequency,
+          endDate,
+          nextDueDate: dueDate
+        } : undefined,
+      };
 
-    addAssignment(classId, newAssignment);
+      updateAssignment(classId, assignmentToEdit.id, updatedAssignment);
+    } else {
+      // Create new assignment
+      const newAssignment: Assignment = {
+        id: Date.now().toString(),
+        title: title.trim(),
+        dueDate,
+        dueTime,
+        notes: notes.trim(),
+        isRecurring,
+        isFutureAssignment,
+        recurringSchedule: isRecurring ? {
+          daysOfWeek: selectedDays,
+          frequency,
+          endDate,
+          nextDueDate: dueDate
+        } : undefined,
+        isCompleted: false,
+        createdAt: new Date().toISOString()
+      };
+
+      addAssignment(classId, newAssignment);
+    }
+
     onUpdate();
-    
-    // Reset form
-    setTitle('');
-    setDueDate('');
-    setDueTime('23:59');
-    setNotes('');
-    setIsRecurring(false);
-    setSelectedDays([]);
-    setEndDate('');
     onClose();
   };
 
@@ -94,7 +147,9 @@ export default function AddAssignmentModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Add Assignment</h2>
+          <h2 className="text-xl font-semibold text-gray-800">
+            {isEdit ? 'Edit Assignment' : 'Add Assignment'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -174,19 +229,70 @@ export default function AddAssignmentModal({
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <input
+                id="futureAssignment"
+                type="checkbox"
+                checked={isFutureAssignment}
+                onChange={(e) => {
+                  setIsFutureAssignment(e.target.checked);
+                  if (e.target.checked) {
+                    setIsRecurring(false);
+                    setSelectedDays([]);
+                    setEndDate('');
+                  }
+                }}
+                disabled={isRecurring}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <label htmlFor="futureAssignment" className={`flex items-center gap-2 text-sm ${isRecurring ? 'text-gray-400' : 'text-gray-700'}`}>
+                <CalendarDays size={16} className="text-purple-600" />
+                Future Assignment (won't count toward totals)
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
                 id="recurring"
                 type="checkbox"
                 checked={isRecurring}
-                onChange={(e) => setIsRecurring(e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                onChange={(e) => {
+                  setIsRecurring(e.target.checked);
+                  if (e.target.checked) {
+                    setIsFutureAssignment(false);
+                  }
+                }}
+                disabled={isFutureAssignment}
+                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
-              <label htmlFor="recurring" className="flex items-center gap-2 text-sm text-gray-700">
+              <label htmlFor="recurring" className={`flex items-center gap-2 text-sm ${isFutureAssignment ? 'text-gray-400' : 'text-gray-700'}`}>
+                <RotateCcw size={16} className="text-blue-600" />
                 Recurring Assignment
               </label>
             </div>
 
             {isRecurring && (
               <div className="space-y-3 pl-6 border-l-2 border-blue-200">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Frequency *
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {FREQUENCY_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setFrequency(option.value as 'weekly' | 'biweekly' | 'monthly')}
+                        className={`p-3 rounded-lg border-2 transition-all text-center ${
+                          frequency === option.value
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-blue-300 hover:bg-blue-50'
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{option.label}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Recurring Days *
@@ -249,7 +355,7 @@ export default function AddAssignmentModal({
               className="btn-primary flex-1"
               disabled={!title.trim() || !dueDate || (isRecurring && (selectedDays.length === 0 || !endDate))}
             >
-              Add Assignment
+              {isEdit ? 'Update Assignment' : 'Add Assignment'}
             </button>
           </div>
         </form>

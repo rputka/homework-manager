@@ -5,8 +5,10 @@ export interface Assignment {
   dueTime: string; // HH:MM format
   notes: string;
   isRecurring: boolean;
+  isFutureAssignment: boolean;
   recurringSchedule?: {
     daysOfWeek: number[]; // 0 = Sunday, 1 = Monday, etc.
+    frequency: 'weekly' | 'biweekly' | 'monthly';
     endDate: string;
     nextDueDate: string;
   };
