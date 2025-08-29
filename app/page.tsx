@@ -36,9 +36,12 @@ export default function HomePage() {
     setEditingClass(null);
   };
 
-  const totalAssignments = data.classes.reduce((sum, classItem) => sum + classItem.assignments.length, 0);
+  // Only count non-future assignments in header totals
+  const totalAssignments = data.classes.reduce((sum, classItem) => 
+    sum + classItem.assignments.filter(a => !a.isFutureAssignment).length, 0
+  );
   const completedAssignments = data.classes.reduce(
-    (sum, classItem) => sum + classItem.assignments.filter(a => a.isCompleted).length,
+    (sum, classItem) => sum + classItem.assignments.filter(a => !a.isFutureAssignment && a.isCompleted).length,
     0
   );
 
