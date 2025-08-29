@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen;
+  }
+}
+
+@layer components {
+  .sticky-note {
+    @apply relative bg-sticky-yellow rounded-lg p-6 shadow-sticky hover:shadow-sticky-hover transition-all duration-300 transform hover:-translate-y-1;
+    /* Add realistic sticky note texture */
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+    background-size: 20px 20px, 15px 15px;
+    /* Add subtle paper texture */
+    filter: contrast(1.05) brightness(1.02);
+  }
+  
+  .sticky-note::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-yellow-400 rounded-t-lg;
+    /* Add sticky adhesive effect */
+    background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  
+  .sticky-note::after {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-full rounded-lg pointer-events-none;
+    /* Add subtle inner shadow for depth */
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 0 rgba(0,0,0,0.05);
+  }
+  
+  .sticky-note.pink {
+    @apply bg-sticky-pink;
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+  }
+  
+  .sticky-note.pink::before {
+    background: linear-gradient(90deg, #ec4899 0%, #f472b6 50%, #ec4899 100%);
+  }
+  
+  .sticky-note.blue {
+    @apply bg-sticky-blue;
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+  }
+  
+  .sticky-note.blue::before {
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #3b82f6 100%);
+  }
+  
+  .sticky-note.green {
+    @apply bg-sticky-green;
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+  }
+  
+  .sticky-note.green::before {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%);
+  }
+  
+  .sticky-note.purple {
+    @apply bg-sticky-purple;
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+  }
+  
+  .sticky-note.purple::before {
+    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #8b5cf6 100%);
+  }
+  
+  .sticky-note.orange {
+    @apply bg-sticky-orange;
+    background-image: 
+      linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%),
+      linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 60%);
+  }
+  
+  .sticky-note.orange::before {
+    background: linear-gradient(90deg, #ea580c 0%, #fb923c 50%, #ea580c 100%);
+  }
+  
+  .assignment-item {
+    @apply flex items-center gap-3 p-3 bg-white/50 rounded-lg mb-2 transition-all duration-200 hover:bg-white/70;
+    /* Add subtle paper texture to assignment items */
+    background-image: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%);
+    background-size: 10px 10px;
+  }
+  
+  .assignment-item.completed {
+    @apply opacity-60;
+  }
+  
+  .assignment-item.completed .assignment-title {
+    @apply line-through text-gray-600;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium;
+    /* Add button texture */
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-200 font-medium;
+    /* Add button texture */
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(0,0,0,0.05) 100%);
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium;
+    /* Add button texture */
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(0,0,0,0.1) 100%);
+  }
+  
+  .input-field {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+    /* Add subtle paper texture to inputs */
+    background-image: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 40%, rgba(255,255,255,0.1) 60%, transparent 60%);
+    background-size: 8px 8px;
+  }
+  
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50;
+  }
+  
+  .modal-content {
+    @apply bg-white rounded-lg p-6 w-full max-w-md mx-4 animate-slide-up;
+    /* Add paper texture to modal */
+    background-image: linear-gradient(45deg, transparent 40%, rgba(0,0,0,0.02) 40%, rgba(0,0,0,0.02) 60%, transparent 60%);
+    background-size: 12px 12px;
+  }
+}
