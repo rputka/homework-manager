@@ -136,7 +136,7 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
         </p>
       </div>
 
-      <div className="flex-1 space-y-2 mb-4 overflow-y-auto min-h-0 max-h-48">
+      <div className="flex-1 space-y-2 overflow-y-auto min-h-0 max-h-64">
         {sortedAssignments.map((assignment) => {
           const overdue = isOverdue(assignment);
           
