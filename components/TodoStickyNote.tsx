@@ -2,20 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { Assignment, Class, StickyColor } from '@/types';
-import { Calendar, Clock, CalendarDays, Settings } from 'lucide-react';
+import { updateAssignment } from '@/utils/storage';
+import { Calendar, Clock, CalendarDays, Settings, Check, FileText } from 'lucide-react';
 import TodoColorModal from './TodoColorModal';
 
 interface TodoStickyNoteProps {
   classes: Class[];
+  onUpdate: () => void;
 }
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const TODO_COLOR_KEY = 'todo-sticky-note-color';
 
-export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
+export default function TodoStickyNote({ classes, onUpdate }: TodoStickyNoteProps) {
   const [todoColor, setTodoColor] = useState<StickyColor>('yellow');
   const [showColorModal, setShowColorModal] = useState(false);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   // Load saved color from localStorage
   useEffect(() => {
@@ -29,6 +32,27 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
   const handleColorChange = (color: StickyColor) => {
     setTodoColor(color);
     localStorage.setItem(TODO_COLOR_KEY, color);
+  };
+
+  // Handle assignment completion toggle
+  const handleToggleComplete = (assignment: Assignment & { className: string; classColor: string }) => {
+    // Find the class that contains this assignment
+    const classItem = classes.find(c => c.name === assignment.className);
+    if (classItem && !assignment.isFutureAssignment) {
+      updateAssignment(classItem.id, assignment.id, { isCompleted: !assignment.isCompleted });
+      onUpdate();
+    }
+  };
+
+  // Handle notes toggle
+  const toggleNotes = (assignmentId: string) => {
+    const newExpanded = new Set(expandedNotes);
+    if (newExpanded.has(assignmentId)) {
+      newExpanded.delete(assignmentId);
+    } else {
+      newExpanded.add(assignmentId);
+    }
+    setExpandedNotes(newExpanded);
   };
 
   // Get all active assignments (non-future) from all classes
@@ -96,10 +120,10 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
       .join(', ');
     
     const frequencyText = assignment.recurringSchedule.frequency === 'weekly' 
-      ? 'weekly' 
+      ? 'Weekly' 
       : assignment.recurringSchedule.frequency === 'biweekly' 
-        ? 'biweekly' 
-        : 'monthly';
+        ? 'Biweekly' 
+        : 'Monthly';
     
     return `${frequencyText} ${days}`;
   };
@@ -125,15 +149,17 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
       </div>
       
       <div className="mb-4 flex-shrink-0">
-        <div className="w-full bg-gray-200 rounded-full h-2">
-          <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
-          ></div>
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>Assignments ({completedCount}/{totalCount} completed)</span>
+          {totalCount > 0 && (
+            <div className="w-16 bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${totalCount > 0 ? (completedCount / totalCount) * 100 : 0}%` }}
+              />
+            </div>
+          )}
         </div>
-        <p className="text-sm text-gray-600 mt-1">
-          {completedCount} of {totalCount} completed
-        </p>
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto min-h-0 max-h-64">
@@ -143,21 +169,24 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
           return (
             <div
               key={`${assignment.id}-${assignment.className}`}
-              className={`p-3 bg-white/70 rounded-lg border-l-4 ${
+              className={`p-3 bg-white/70 rounded-lg ${
                 assignment.isCompleted ? 'opacity-60' : ''
               }`}
-              style={{ borderLeftColor: `var(--sticky-${assignment.classColor})` }}
             >
               <div className="flex items-start gap-3">
-                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                  assignment.isCompleted
-                    ? 'bg-green-500 border-green-500'
-                    : 'border-gray-300'
-                }`}>
-                  {assignment.isCompleted && (
-                    <div className="w-2 h-2 bg-white rounded-sm"></div>
-                  )}
-                </div>
+                <button
+                  onClick={() => handleToggleComplete(assignment)}
+                  disabled={assignment.isFutureAssignment}
+                  className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 self-start mt-3 transition-colors ${
+                    assignment.isFutureAssignment
+                      ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                      : assignment.isCompleted
+                      ? 'bg-green-500 border-green-500 text-white'
+                      : 'border-gray-300 hover:border-green-400'
+                  }`}
+                >
+                  {assignment.isCompleted && <Check size={12} />}
+                </button>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
@@ -189,7 +218,23 @@ export default function TodoStickyNote({ classes }: TodoStickyNoteProps) {
                         <span>{getRecurringText(assignment)}</span>
                       </div>
                     )}
+                    
+                    {assignment.notes && (
+                      <button
+                        onClick={() => toggleNotes(assignment.id)}
+                        className="flex items-center gap-1 hover:text-blue-600 transition-colors flex-shrink-0"
+                      >
+                        <FileText size={12} />
+                        <span>Notes</span>
+                      </button>
+                    )}
                   </div>
+                  
+                  {expandedNotes.has(assignment.id) && assignment.notes && (
+                    <div className="mt-2 p-2 bg-white/70 rounded text-xs text-gray-700">
+                      {assignment.notes}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

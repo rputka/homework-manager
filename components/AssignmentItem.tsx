@@ -66,16 +66,12 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
       .join(', ');
     
     const frequencyText = assignment.recurringSchedule.frequency === 'weekly' 
-      ? 'weekly' 
+      ? 'Weekly' 
       : assignment.recurringSchedule.frequency === 'biweekly' 
-        ? 'biweekly' 
-        : 'monthly';
+        ? 'Biweekly' 
+        : 'Monthly';
     
-    // Parse end date in local timezone to avoid timezone issues
-    const [endYear, endMonth, endDay] = assignment.recurringSchedule.endDate.split('-').map(Number);
-    const endDate = new Date(endYear, endMonth - 1, endDay).toLocaleDateString();
-    
-    return `${frequencyText} ${days} until ${endDate}`;
+    return `${frequencyText} ${days}`;
   };
 
   const isOverdue = () => {
@@ -111,7 +107,7 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <h3 className={`assignment-title font-medium truncate ${
+            <h3 className={`assignment-title font-medium truncate text-sm ${
               overdue ? 'text-red-600' : 'text-gray-800'
             }`}>
               {assignment.title}
@@ -138,9 +134,9 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
           </div>
         </div>
         
-        <div className="flex items-center gap-3 text-sm text-gray-600 flex-wrap">
+        <div className="flex items-center gap-2 text-xs text-gray-600">
           <div className="flex items-center gap-1 flex-shrink-0">
-            <Calendar size={14} />
+            <Calendar size={12} />
             <span className={overdue ? 'text-red-600 font-medium' : ''}>
               {formatDueDate(assignment.dueDate)} at {formatTime(assignment.dueTime)}
             </span>
@@ -148,7 +144,7 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
           
           {assignment.recurringSchedule && (
             <div className="flex items-center gap-1 text-gray-600 flex-shrink-0">
-              <Clock size={14} />
+              <Clock size={12} />
               <span className="text-xs">{getRecurringText()}</span>
             </div>
           )}
@@ -158,14 +154,14 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
               onClick={() => setShowNotes(!showNotes)}
               className="flex items-center gap-1 hover:text-blue-600 transition-colors flex-shrink-0"
             >
-              <FileText size={14} />
+              <FileText size={12} />
               <span>Notes</span>
             </button>
           )}
         </div>
 
         {showNotes && assignment.notes && (
-          <div className="mt-2 p-2 bg-white/70 rounded text-sm text-gray-700">
+          <div className="mt-2 p-2 bg-white/70 rounded text-xs text-gray-700">
             {assignment.notes}
           </div>
         )}

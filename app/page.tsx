@@ -141,7 +141,7 @@ export default function HomePage() {
             
             {/* Todo List Sticky Note */}
             <div className="h-92">
-              <TodoStickyNote classes={data.classes} />
+              <TodoStickyNote classes={data.classes} onUpdate={loadData} />
             </div>
           </div>
         )}
