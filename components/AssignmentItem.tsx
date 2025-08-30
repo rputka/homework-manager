@@ -96,8 +96,11 @@ export default function AssignmentItem({ assignment, classId, onUpdate, onEdit }
     <div className={`assignment-item ${assignment.isCompleted ? 'completed' : ''} ${assignment.isFutureAssignment ? 'opacity-75' : ''}`}>
       <button
         onClick={handleToggleComplete}
+        disabled={assignment.isFutureAssignment}
         className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0 self-start mt-3 ${
-          assignment.isCompleted
+          assignment.isFutureAssignment
+            ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+            : assignment.isCompleted
             ? 'bg-green-500 border-green-500 text-white'
             : 'border-gray-300 hover:border-green-400'
         }`}

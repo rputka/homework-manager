@@ -5,6 +5,7 @@ import { getStoredData, resetCompletedAssignments } from '@/utils/storage';
 import { AppData, Class } from '@/types';
 import ClassStickyNote from '@/components/ClassStickyNote';
 import AddClassModal from '@/components/AddClassModal';
+import TodoStickyNote from '@/components/TodoStickyNote';
 import { Plus, RotateCcw, BookOpen, Calendar } from 'lucide-react';
 
 export default function HomePage() {
@@ -137,6 +138,11 @@ export default function HomePage() {
                 />
               </div>
             ))}
+            
+            {/* Todo List Sticky Note */}
+            <div className="h-92">
+              <TodoStickyNote classes={data.classes} />
+            </div>
           </div>
         )}
       </main>
